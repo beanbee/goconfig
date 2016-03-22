@@ -121,9 +121,37 @@ func (c *ConfigFile) read(reader io.Reader) (err error) {
 			} else {
 				i = strings.IndexAny(line, "=:")
 				if i <= 0 {
-					return readError{ERR_COULD_NOT_PARSE, line}
+					// return readError{ERR_COULD_NOT_PARSE, line}
+					key = strings.TrimSpace(line[:]) // add support for key without value
+					value = ""
+				} else {
+					key = strings.TrimSpace(line[0:i])
+					//[SWH|+]:支持引号包围起来的字串
+					lineRight := strings.TrimSpace(line[i+1:])
+					lineRightLength := len(lineRight)
+					firstChar := ""
+					if lineRightLength >= 2 {
+						firstChar = lineRight[0:1]
+					}
+					if firstChar == "`" {
+						valQuote = "`"
+					} else if lineRightLength >= 6 && lineRight[0:3] == `"""` {
+						valQuote = `"""`
+					}
+					if valQuote != "" {
+						qLen := len(valQuote)
+						pos := strings.LastIndex(lineRight[qLen:], valQuote)
+						if pos == -1 {
+							return readError{ERR_COULD_NOT_PARSE, line}
+						}
+						pos = pos + qLen
+						value = lineRight[qLen:pos]
+					} else {
+						value = strings.TrimSpace(lineRight[0:])
+					}
+					//[SWH|+];
 				}
-				key = strings.TrimSpace(line[0:i])
+				// key = strings.TrimSpace(line[0:i])
 			}
 			//[SWH|+];
 
@@ -132,31 +160,6 @@ func (c *ConfigFile) read(reader io.Reader) (err error) {
 				key = "#" + fmt.Sprint(count)
 				count++
 			}
-
-			//[SWH|+]:支持引号包围起来的字串
-			lineRight := strings.TrimSpace(line[i+1:])
-			lineRightLength := len(lineRight)
-			firstChar := ""
-			if lineRightLength >= 2 {
-				firstChar = lineRight[0:1]
-			}
-			if firstChar == "`" {
-				valQuote = "`"
-			} else if lineRightLength >= 6 && lineRight[0:3] == `"""` {
-				valQuote = `"""`
-			}
-			if valQuote != "" {
-				qLen := len(valQuote)
-				pos := strings.LastIndex(lineRight[qLen:], valQuote)
-				if pos == -1 {
-					return readError{ERR_COULD_NOT_PARSE, line}
-				}
-				pos = pos + qLen
-				value = lineRight[qLen:pos]
-			} else {
-				value = strings.TrimSpace(lineRight[0:])
-			}
-			//[SWH|+];
 
 			c.SetValue(section, key, value)
 			// Set key comments and empty if it has comments.
