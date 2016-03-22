@@ -16,20 +16,24 @@ package goconfig
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 )
 
-// Write spaces around "=" to look better.
+// Write spaces around "%-41s = $value" to look better.
 var PrettyFormat = true
+
+// Default equal sign "="
+var EqualSign = "="
+
+// Support key without value
+var TrimNullValueSign = true
 
 // SaveConfigData writes configuration to a writer
 func SaveConfigData(c *ConfigFile, out io.Writer) (err error) {
-	equalSign := "="
-	if PrettyFormat {
-		equalSign = " = "
-	}
+	equalSign := strings.TrimSpace(EqualSign)
 
 	buf := bytes.NewBuffer(nil)
 	for _, section := range c.sectionList {
@@ -83,8 +87,22 @@ func SaveConfigData(c *ConfigFile, out io.Writer) (err error) {
 					}
 				}
 
+				// concat key=value string
+				var key_value_string string
+
+				// use pretty format
+				if PrettyFormat {
+					key_value_string = fmt.Sprintf("%-41s %s %s%s", keyName, equalSign, value, LineBreak)
+				} else {
+					key_value_string = fmt.Sprintf("%s %s %s%s", keyName, equalSign, value, LineBreak)
+				}
+				// support for key without value
+				if TrimNullValueSign && strings.TrimSpace(value) == "" {
+					key_value_string = fmt.Sprintf("%s%s", keyName, LineBreak)
+				}
+
 				// Write key and value.
-				if _, err = buf.WriteString(keyName + equalSign + value + LineBreak); err != nil {
+				if _, err = buf.WriteString(key_value_string); err != nil {
 					return err
 				}
 			}
