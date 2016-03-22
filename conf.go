@@ -488,7 +488,9 @@ func (c *ConfigFile) SetKeyComments(section, key, comments string) bool {
 	// Check if key exists.
 	_, ok := c.keyComments[section][key]
 	if comments[0] != '#' && comments[0] != ';' {
-		comments = "; " + comments
+		// comments = "; " + comments
+		// change default comment prefix to '#'
+		comments = "# " + comments
 	}
 	c.keyComments[section][key] = comments
 	return !ok
