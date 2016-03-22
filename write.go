@@ -57,11 +57,17 @@ func SaveConfigData(c *ConfigFile, out io.Writer) (err error) {
 			}
 		}
 
-		for _, key := range c.keyList[section] {
+		for num, key := range c.keyList[section] {
 			if key != " " {
 				// Write key comments.
 				if len(c.GetKeyComments(section, key)) > 0 {
-					if _, err = buf.WriteString(c.GetKeyComments(section, key) + LineBreak); err != nil {
+					// do not write linebreak for first line
+					commentStr := c.GetKeyComments(section, key) + LineBreak
+					if num != 1 {
+						commentStr = LineBreak + commentStr
+					}
+
+					if _, err = buf.WriteString(commentStr); err != nil {
 						return err
 					}
 				}
