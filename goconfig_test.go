@@ -39,6 +39,7 @@ array_key = 1,2,3,4,5
 
 [What's this?]
 ; Not Enough Comments!!
+# line 2
 name = try one more value ^-^
 empty_value = 
 no_value`
@@ -49,6 +50,9 @@ no_value`
 	tmpFile := "test_save.ini"
 
 	// TrimNullValueSign = false
+	c.SetKeyComments("Demo", "chinese-var", "comment1")
+	c.SetKeyComments("Demo", "key2", "comment2")
+
 	SaveConfigFile(c, tmpFile)
 
 	os.Remove(tmpFile)
