@@ -22,8 +22,14 @@ import (
 	"strings"
 )
 
+const (
+	FORMAT_COMPAT = iota
+	FORMAT_NORMAL
+	FORMAT_LONG
+)
+
 // Write spaces around "%-41s = $value" to look better.
-var PrettyFormat = true
+var LineFormat = FORMAT_LONG
 
 // Default equal sign "="
 var EqualSign = "="
@@ -91,11 +97,15 @@ func SaveConfigData(c *ConfigFile, out io.Writer) (err error) {
 				var key_value_string string
 
 				// use pretty format
-				if PrettyFormat {
+				switch LineFormat {
+				case FORMAT_LONG:
 					key_value_string = fmt.Sprintf("%-41s %s %s%s", keyName, equalSign, value, LineBreak)
-				} else {
+				case FORMAT_NORMAL:
 					key_value_string = fmt.Sprintf("%s %s %s%s", keyName, equalSign, value, LineBreak)
+				default: // FORMAT_COMPAT
+					key_value_string = fmt.Sprintf("%s%s%s%s", keyName, equalSign, value, LineBreak)
 				}
+
 				// support for key without value
 				if TrimNullValueSign && strings.TrimSpace(value) == "" {
 					key_value_string = fmt.Sprintf("%s%s", keyName, LineBreak)
