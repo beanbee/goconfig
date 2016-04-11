@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	FORMAT_COMPAT = iota
+	FORMAT_COMPACT = iota
 	FORMAT_NORMAL
 	FORMAT_LONG
 )
@@ -108,7 +108,7 @@ func SaveConfigData(c *ConfigFile, out io.Writer) (err error) {
 					key_value_string = fmt.Sprintf("%-41s %s %s%s", keyName, equalSign, value, LineBreak)
 				case FORMAT_NORMAL:
 					key_value_string = fmt.Sprintf("%s %s %s%s", keyName, equalSign, value, LineBreak)
-				default: // FORMAT_COMPAT
+				default: // FORMAT_COMPACT
 					key_value_string = fmt.Sprintf("%s%s%s%s", keyName, equalSign, value, LineBreak)
 				}
 
