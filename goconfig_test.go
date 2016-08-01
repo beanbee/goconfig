@@ -48,12 +48,15 @@ no_value`
 		t.Logf("load data failed %v", err)
 	}
 	tmpFile := "test_save.ini"
+	tmpFileFmt := tmpFile + ".fmt"
 
 	// TrimNullValueSign = false
 	c.SetKeyComments("Demo", "chinese-var", "comment1")
 	c.SetKeyComments("Demo", "key2", "comment2")
 
 	SaveConfigFile(c, tmpFile)
+	SaveConfigFileFmt(c, tmpFileFmt, FORMAT_LONG, true)
 
 	os.Remove(tmpFile)
+	os.Remove(tmpFileFmt)
 }

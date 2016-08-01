@@ -23,23 +23,19 @@ import (
 )
 
 const (
-	FORMAT_COMPACT = iota
-	FORMAT_NORMAL
-	FORMAT_LONG
+	FORMAT_COMPAT = iota // "key=value"
+	FORMAT_NORMAL        // "key = value"
+	FORMAT_LONG          // "%-41s = $value"
 )
 
-// Write spaces around "%-41s = $value" to look better.
-var LineFormat = FORMAT_LONG
+var defaultFormat = FORMAT_COMPAT
 
-// Default equal sign "="
-var EqualSign = "="
-
-// Support key without value
-var TrimNullValueSign = true
-
-// SaveConfigData writes configuration to a writer
-func SaveConfigData(c *ConfigFile, out io.Writer) (err error) {
-	equalSign := strings.TrimSpace(EqualSign)
+// SaveConfigDataFmt writes configuration to a writer
+// Default equal sign   : "="
+// @@ format            : customize output format
+// @@ trimNullSign : support key without value
+func SaveConfigDataFmt(c *ConfigFile, out io.Writer, format int, trimNullSign bool) (err error) {
+	equalSign := "="
 
 	buf := bytes.NewBuffer(nil)
 	for _, section := range c.sectionList {
@@ -103,17 +99,19 @@ func SaveConfigData(c *ConfigFile, out io.Writer) (err error) {
 				var key_value_string string
 
 				// use pretty format
-				switch LineFormat {
+				switch format {
 				case FORMAT_LONG:
 					key_value_string = fmt.Sprintf("%-41s %s %s%s", keyName, equalSign, value, LineBreak)
 				case FORMAT_NORMAL:
 					key_value_string = fmt.Sprintf("%s %s %s%s", keyName, equalSign, value, LineBreak)
-				default: // FORMAT_COMPACT
+				case FORMAT_COMPAT:
 					key_value_string = fmt.Sprintf("%s%s%s%s", keyName, equalSign, value, LineBreak)
+				default:
+					return fmt.Errorf("invalid format number: %d", format)
 				}
 
 				// support for key without value
-				if TrimNullValueSign && strings.TrimSpace(value) == "" {
+				if trimNullSign && strings.TrimSpace(value) == "" {
 					key_value_string = fmt.Sprintf("%s%s", keyName, LineBreak)
 				}
 
@@ -133,19 +131,30 @@ func SaveConfigData(c *ConfigFile, out io.Writer) (err error) {
 	if _, err := buf.WriteTo(out); err != nil {
 		return err
 	}
+
 	return nil
 }
 
+// SaveConfigData writes configuration to a writer
+func SaveConfigData(c *ConfigFile, out io.Writer) (err error) {
+	return SaveConfigDataFmt(c, out, defaultFormat, false)
+}
+
 // SaveConfigFile writes configuration file to local file system
-func SaveConfigFile(c *ConfigFile, filename string) (err error) {
+func SaveConfigFileFmt(c *ConfigFile, filename string, format int, trimNullSign bool) (err error) {
 	// Write configuration file by filename.
 	var f *os.File
 	if f, err = os.Create(filename); err != nil {
 		return err
 	}
 
-	if err := SaveConfigData(c, f); err != nil {
+	if err := SaveConfigDataFmt(c, f, format, trimNullSign); err != nil {
 		return err
 	}
 	return f.Close()
+}
+
+// SaveConfigFile writes configuration file to local file system
+func SaveConfigFile(c *ConfigFile, filename string) (err error) {
+	return SaveConfigFileFmt(c, filename, defaultFormat, false)
 }
